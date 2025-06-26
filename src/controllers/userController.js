@@ -34,7 +34,7 @@ export const createUser = async (req, res) => {
       [username, email, passwordHash, rut || null, role_id || null, points || 0]
     );
     const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [result.insertId]);
-    res.status(201).json(rows[0]);
+    res.status(201).json({message: 'User created successfully'});
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
