@@ -2,12 +2,12 @@ const pool = require('../config/db');
 
 
 exports.getAll = async () => {
-  const [rows] = await pool.query('SELECT id, username, email, role_id, is_active, created_at FROM users WHERE is_active = 1');
+  const [rows] = await pool.query('SELECT id, username, email, points, rut, role_id, is_active, created_at FROM users WHERE is_active = 1');
   return rows;
 };
 
 exports.getById = async (id) => {
-  const [rows] = await pool.query('SELECT id, username, email, role_id, is_active, created_at FROM users WHERE id = ? AND is_active = 1', [id]);
+  const [rows] = await pool.query('SELECT id, username, email, points, rut, role_id, is_active, created_at FROM users WHERE id = ? AND is_active = 1', [id]);
   return rows[0];
 };
 
@@ -17,19 +17,19 @@ exports.getByEmail = async (email) => {
 };
 
 exports.create = async (user) => {
-  const { username, email, password_hash, role_id } = user;
+  const { username, email, password_hash, role_id, rut, points } = user;
   const [result] = await pool.query(
-    'INSERT INTO users (username, email, password_hash, role_id, is_active) VALUES (?, ?, ?, ?, 1)',
-    [username, email, password_hash, role_id]
+    'INSERT INTO users (username, email, password_hash, rut, role_id, points, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)',
+    [username, email, password_hash, rut, role_id, points || 0]
   );
   return result.insertId;
 };
 
 exports.update = async (id, user) => {
-  const { username, email, role_id } = user;
+  const { username, email, role_id, rut, points } = user;
   const [result] = await pool.query(
-    'UPDATE users SET username=?, email=?, role_id=? WHERE id=? AND is_active = 1',
-    [username, email, role_id, id]
+    'UPDATE users SET username=?, email=?, rut=?, role_id=?, points=? WHERE id=? AND is_active = 1',
+    [username, email, rut, role_id, points, id]
   );
   return result.affectedRows;
 };
