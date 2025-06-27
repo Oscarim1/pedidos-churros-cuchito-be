@@ -2,6 +2,7 @@ import express from 'express';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import roleRoutes from './routes/roleRoutes.js';
+import productRoutes from './routes/productRoutes.js';
 import setupSwagger from './config/swagger.js';
 import dotenv from 'dotenv';
 
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRoutes);
+app.use('/api/products', productRoutes);
 
 
 const PORT = process.env.PORT || 3000;
