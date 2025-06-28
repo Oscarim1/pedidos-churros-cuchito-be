@@ -4,6 +4,7 @@ import userRoutes from './routes/userRoutes.js';
 import roleRoutes from './routes/roleRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
+import orderItemRoutes from './routes/orderItemRoutes.js';
 import setupSwagger from './config/swagger.js';
 import dotenv from 'dotenv';
 
@@ -20,6 +21,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/order-items', orderItemRoutes);
 
 
 const PORT = process.env.PORT || 3000;
