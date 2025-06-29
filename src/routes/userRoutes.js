@@ -6,8 +6,11 @@ import {
   updateUser,
   deleteUser
 } from '../controllers/userController.js';
+import { verificarToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+router.use(verificarToken);
 
 router.get('/', getUsers);
 router.get('/:id', getUserById);
