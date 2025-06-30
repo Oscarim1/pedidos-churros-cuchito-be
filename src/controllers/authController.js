@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import * as authService from '../services/authservice.js';
+import * as roleService from '../services/roleService.js';
+import * as userService from '../services/userService.js';
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
@@ -11,14 +13,15 @@ export const login = async (req, res) => {
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(401).json({ message: 'Contraseña incorrecta' });
 
-    const accessToken = authService.generarAccessToken({ id: user.id, role_id: user.role_id });
+    const role = await roleService.getRoleById(user.role_id);
+    const accessToken = authService.generarAccessToken({ id: user.id, rol: role?.name || user.role_id });
     const refreshToken = authService.generarRefreshToken({ id: user.id });
     await authService.saveRefreshToken(user.id, refreshToken);
 
     res.json({
       accessToken,
       refreshToken,
-      usuario: { id: user.id, username: user.username, role_id: user.role_id }
+      usuario: { id: user.id, username: user.username, rol: role?.name || user.role_id }
     });
   } catch (err) {
     console.error(err);
@@ -38,15 +41,16 @@ export const register = async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
     const userId = await authService.createUser({ username, email, passwordHash, role_id });
+    const role = await roleService.getRoleById(role_id);
 
-    const accessToken = authService.generarAccessToken({ id: userId, role_id });
+    const accessToken = authService.generarAccessToken({ id: userId, rol: role?.name || role_id });
     const refreshToken = authService.generarRefreshToken({ id: userId });
     await authService.saveRefreshToken(userId, refreshToken);
 
     res.status(201).json({
       accessToken,
       refreshToken,
-      usuario: { id: userId, username, email, role_id }
+      usuario: { id: userId, username, email, rol: role?.name || role_id }
     });
   } catch (err) {
     console.error(err);
@@ -64,9 +68,9 @@ export const refreshToken = async (req, res) => {
     if (!tokenRow)
       return res.status(403).json({ message: 'Refresh token inválido, revocado o expirado' });
 
-    const user = await authService.findUserByEmail(tokenRow.email);
-    // OJO: si necesitas el rol, puede que necesites una función para obtener el usuario por id
-    const accessToken = authService.generarAccessToken({ id: decoded.id, role_id: user?.role_id });
+    const user = await userService.getUserById(decoded.id);
+    const role = user ? await roleService.getRoleById(user.role_id) : null;
+    const accessToken = authService.generarAccessToken({ id: decoded.id, rol: role?.name || user?.role_id });
     res.json({ accessToken });
   } catch (err) {
     console.error(err);
