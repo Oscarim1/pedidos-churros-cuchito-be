@@ -11,6 +11,16 @@ export async function getUserById(id) {
   return rows[0];
 }
 
+export async function getUserByEmail(email) {
+  const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+  return rows[0];
+}
+
+export async function getUserByRut(rut) {
+  const [rows] = await pool.query('SELECT * FROM users WHERE rut = ?', [rut]);
+  return rows[0];
+}
+
 export async function createUser({ username, email, password, rut, role_id, points }) {
   const passwordHash = await bcrypt.hash(password, 10);
   const [result] = await pool.query(
