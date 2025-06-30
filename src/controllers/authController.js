@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import * as authService from '../services/authservice.js';
 
 export const login = async (req, res) => {

@@ -6,8 +6,11 @@ import {
   updateProduct,
   deleteProduct
 } from '../controllers/productController.js';
+import { verificarToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+router.use(verificarToken);
 
 router.get('/', getProducts);
 router.get('/:id', getProductById);

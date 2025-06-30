@@ -6,8 +6,11 @@ import {
   updateOrder,
   deleteOrder
 } from '../controllers/orderController.js';
+import { verificarToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+router.use(verificarToken);
 
 router.get('/', getOrders);
 router.get('/:id', getOrderById);

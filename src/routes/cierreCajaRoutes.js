@@ -6,8 +6,11 @@ import {
   updateCierreCaja,
   deleteCierreCaja
 } from '../controllers/cierreCajaController.js';
+import { verificarToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+router.use(verificarToken);
 
 router.get('/', getCierresCaja);
 router.get('/:id', getCierreCajaById);
