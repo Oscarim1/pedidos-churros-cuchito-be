@@ -57,11 +57,11 @@ export const updateUser = async (req, res) => {
   try {
     const user = await userService.getUserById(id);
     if (user.username === username) {
-      return res.status(404).json({ message: 'Este ya es tu nombre.' });
+      return res.status(409).json({ message: 'Este ya es tu nombre.' });
     }
 
     if (user.email === email) {
-      return res.status(404).json({ message: 'Este ya es tu email.' });
+      return res.status(409).json({ message: 'Este ya es tu email.' });
     }
 
     if (user.rut && user.rut === req.body.rut) {
@@ -69,15 +69,15 @@ export const updateUser = async (req, res) => {
     }
 
     if (user.role_id && user.role_id === role_id) {
-      return res.status(404).json({ message: 'Este ya es tu rol.' });
+      return res.status(409).json({ message: 'Este ya es tu rol.' });
     }
 
     if (user.is_active === is_active) {
-      return res.status(404).json({ message: 'Este ya es tu estado.' });
+      return res.status(409).json({ message: 'Este ya es tu estado.' });
     }
 
     if (user.points === points) {
-      return res.status(404).json({ message: 'Este ya es tu puntaje.' });
+      return res.status(409).json({ message: 'Este ya es tu puntaje.' });
     }
 
     const updated = await userService.updateUser(id, {
