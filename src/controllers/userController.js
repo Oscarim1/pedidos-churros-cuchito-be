@@ -1,4 +1,5 @@
 import * as userService from '../services/userService.js';
+import * as roleService from '../services/roleService.js';
 
 export const getUsers = async (req, res) => {
   try {
@@ -27,8 +28,23 @@ export const createUser = async (req, res) => {
   if (!username || !email || !password)
     return res.status(400).json({ message: 'username, email and password are required' });
   try {
+    const existingRut = await userService.getUserByRut(rut);
+    if (existingRut) {
+      return res.status(409).json({ message: 'El rut del usuario ya está en uso.' });
+    }
+
+    const existingUser = await userService.getUserByEmail(email);
+    if (existingUser) {
+      return res.status(409).json({ message: 'El email del usuario ya está en uso.' });
+    }
+
+    const existingRole = await roleService.getRoleById(role_id);
+    if (!existingRole) {
+      return res.status(409).json({ message: 'Rol invalido.' });
+    }
+
     await userService.createUser({ username, email, password, rut, role_id, points });
-    res.status(201).json({ message: 'User created successfully' });
+    res.status(201).json({ message: 'Usuario creado con exito.' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
