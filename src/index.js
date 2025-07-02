@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import roleRoutes from './routes/roleRoutes.js';
@@ -16,6 +17,7 @@ const app = express();
 setupSwagger(app);
 
 app.use(express.json());
+app.use(cors());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
