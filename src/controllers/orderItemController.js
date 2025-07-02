@@ -24,8 +24,8 @@ export const getOrderItemById = async (req, res) => {
 
 export const createOrderItem = async (req, res) => {
   const { order_id, product_id, quantity, price, is_active } = req.body;
-  if (!order_id || !product_id || price == null)
-    return res.status(400).json({ message: 'order_id, product_id and price are required' });
+  if (!order_id || !product_id || price == null || quantity == null)
+    return res.status(400).json({ message: 'order_id, product_id, quantity and price are required' });
   try {
     const item = await orderItemService.createOrderItem({ order_id, product_id, quantity, price, is_active });
     res.status(201).json(item);
