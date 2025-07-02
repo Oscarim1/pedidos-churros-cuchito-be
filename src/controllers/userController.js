@@ -53,13 +53,37 @@ export const createUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { username, email, password, rut, role_id, points, is_active } = req.body;
+  const { username, email, password, role_id, points, is_active } = req.body;
   try {
+    const user = await userService.getUserById(id);
+    if (user.username === username) {
+      return res.status(409).json({ message: 'Este ya es tu nombre.' });
+    }
+
+    if (user.email === email) {
+      return res.status(409).json({ message: 'Este ya es tu email.' });
+    }
+
+    if (user.rut && user.rut === req.body.rut) {
+      return res.status(409).json({ message: 'No puedes actualizar tu Rut.' });
+    }
+
+    if (user.role_id && user.role_id === role_id) {
+      return res.status(409).json({ message: 'Este ya es tu rol.' });
+    }
+
+    if (user.is_active === is_active) {
+      return res.status(409).json({ message: 'Este ya es tu estado.' });
+    }
+
+    if (user.points === points) {
+      return res.status(409).json({ message: 'Este ya es tu puntaje.' });
+    }
+
     const updated = await userService.updateUser(id, {
       username,
       email,
       password,
-      rut,
       role_id,
       points,
       is_active

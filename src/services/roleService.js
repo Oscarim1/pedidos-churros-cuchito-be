@@ -10,6 +10,11 @@ export async function getRoleById(id) {
   return rows[0];
 }
 
+export async function getRoleByName(name) {
+  const [rows] = await pool.query('SELECT * FROM roles WHERE name = ?', [name]);
+  return rows[0];
+}
+
 export async function createRole({ name, description, is_active }) {
   const [result] = await pool.query(
     'INSERT INTO roles (name, description, is_active) VALUES (?, ?, ?)',

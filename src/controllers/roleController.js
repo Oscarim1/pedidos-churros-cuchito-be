@@ -26,6 +26,8 @@ export const createRole = async (req, res) => {
   const { name, description, is_active } = req.body;
   if (!name) return res.status(400).json({ message: 'name is required' });
   try {
+    const existingRole = await roleService.getRoleByName(name);
+    if (existingRole) return res.status(409).json({ message: 'El Rol ya existe.' });
     const role = await roleService.createRole({ name, description, is_active });
     res.status(201).json(role);
   } catch (err) {
@@ -36,10 +38,10 @@ export const createRole = async (req, res) => {
 
 export const updateRole = async (req, res) => {
   const { id } = req.params;
-  const { name, description, is_active } = req.body;
+  const { description, is_active } = req.body;
   try {
-    const updated = await roleService.updateRole(id, { name, description, is_active });
-    if (!updated) return res.status(404).json({ message: 'Role not found' });
+    const updated = await roleService.updateRole(id, { description, is_active });
+    if (!updated) return res.status(404).json({ message: 'Ocurrio un error.' });
     res.json(updated);
   } catch (err) {
     console.error(err);

@@ -13,10 +13,10 @@ const router = express.Router();
 
 router.use(verificarToken);
 
-router.get('/', getUsers);
+router.get('/', tieneRol('admin'), getUsers);
 router.get('/:id', getUserById);
 router.post('/', tieneRol('admin'), createUser);
-router.put('/:id', updateUser);
-router.delete('/:id', deleteUser);
+router.put('/:id',tieneRol('admin'), updateUser);
+router.delete('/:id', tieneRol('admin'), deleteUser);
 
 export default router;
