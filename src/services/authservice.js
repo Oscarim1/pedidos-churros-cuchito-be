@@ -4,11 +4,11 @@ import jwt from 'jsonwebtoken';
 import { pool } from '../config/db.js';
 
 export function generarAccessToken(payload) {
-  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '15m' });
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 }
 
 export function generarRefreshToken(payload) {
-  return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+  return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '8d' });
 }
 
 export async function findUserByEmail(email) {
