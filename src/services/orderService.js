@@ -11,6 +11,21 @@ export async function getOrderById(id) {
   return rows[0];
 }
 
+export async function getOrderWithItems(id) {
+  const [orderRows] = await pool.query('SELECT * FROM orders WHERE id = ?', [id]);
+  if (orderRows.length === 0) return null;
+  const order = orderRows[0];
+  const [items] = await pool.query(
+    `SELECT oi.*, p.name, p.category
+     FROM order_items oi
+     JOIN products p ON oi.product_id = p.id
+     WHERE oi.order_id = ?`,
+    [id]
+  );
+  order.items = items;
+  return order;
+}
+
 // Cambios aquí: No recibimos order_number como parámetro
 export async function createOrder({ user_id, guest_name, total, points_used, points_earned, metodo_pago, status, is_active }) {
   const id = randomUUID();
