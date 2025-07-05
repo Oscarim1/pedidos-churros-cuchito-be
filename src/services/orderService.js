@@ -11,23 +11,44 @@ export async function getOrderById(id) {
   return rows[0];
 }
 
-export async function createOrder({ user_id, guest_name, total, points_used, points_earned, metodo_pago, status, order_number, is_active }) {
+// Cambios aquí: No recibimos order_number como parámetro
+export async function createOrder({ user_id, guest_name, total, points_used, points_earned, metodo_pago, status, is_active }) {
   const id = randomUUID();
+
+  // Obtener el último order_number del día actual
+  const [rows] = await pool.query(
+    `SELECT MAX(order_number) AS last_order FROM orders WHERE DATE(created_at) = CURDATE()`
+  );
+  const lastOrder = rows[0]?.last_order ?? 0;
+  const order_number = lastOrder + 1;
+
+  // Insertar la orden con el nuevo order_number
   await pool.query(
     `INSERT INTO orders (id, user_id, guest_name, total, points_used, points_earned, metodo_pago, status, order_number, is_active)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, user_id || null, guest_name || null, total, points_used ?? 0, points_earned ?? 0, metodo_pago || null, status || null, order_number || null, is_active ?? true]
+    [
+      id,
+      user_id || null,
+      guest_name || null,
+      total,
+      points_used ?? 0,
+      points_earned ?? 0,
+      metodo_pago || null,
+      status || null,
+      order_number,
+      is_active ?? true
+    ]
   );
-  const [rows] = await pool.query('SELECT * FROM orders WHERE id = ?', [id]);
-  return rows[0];
+  const [created] = await pool.query('SELECT * FROM orders WHERE id = ?', [id]);
+  return created[0];
 }
 
-export async function updateOrder(id, { user_id, guest_name, total, points_used, points_earned, metodo_pago, status, order_number, is_active }) {
+export async function updateOrder(id, { user_id, guest_name, total, points_used, points_earned, metodo_pago, status, is_active }) {
   const [rows] = await pool.query('SELECT * FROM orders WHERE id = ?', [id]);
   if (rows.length === 0) return null;
   const order = rows[0];
   await pool.query(
-    `UPDATE orders SET user_id = ?, guest_name = ?, total = ?, points_used = ?, points_earned = ?, metodo_pago = ?, status = ?, order_number = ?, is_active = ?, updated_at = NOW() WHERE id = ?`,
+    `UPDATE orders SET user_id = ?, guest_name = ?, total = ?, points_used = ?, points_earned = ?, metodo_pago = ?, status = ?, is_active = ?, updated_at = NOW() WHERE id = ?`,
     [
       user_id ?? order.user_id,
       guest_name ?? order.guest_name,
@@ -36,7 +57,6 @@ export async function updateOrder(id, { user_id, guest_name, total, points_used,
       points_earned ?? order.points_earned,
       metodo_pago ?? order.metodo_pago,
       status ?? order.status,
-      order_number ?? order.order_number,
       is_active ?? order.is_active,
       id
     ]
