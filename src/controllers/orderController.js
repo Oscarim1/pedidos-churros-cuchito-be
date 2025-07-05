@@ -71,7 +71,7 @@ export const downloadOrderPDF = async (req, res) => {
           <tr><th>Producto</th><th>Cantidad</th><th>Subtotal</th></tr>
           ${formatRows(others)}
         </table>
-        <h2>Total: $${order.total.toFixed(2)}</h2>
+        <h2>Total: $${parseFloat(order.total).toFixed(2)}</h2>
       </body>
       </html>`;
 
