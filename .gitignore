@@ -42,3 +42,4 @@ prisma/dev.db-journal
 # Otros posibles directorios temporales
 tmp/
 temp/
+pedidos_dump.sql
