@@ -1,5 +1,10 @@
 import * as orderService from '../services/orderService.js';
-import puppeteer from 'puppeteer';
+import PDFDocument from 'pdfkit';
+import path from 'path';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import archiver from 'archiver';
+import { generateOrderPDF } from '../utils/pdfGenerator.js';
 
 export const getOrders = async (req, res) => {
   try {
@@ -23,101 +28,80 @@ export const getOrderById = async (req, res) => {
   }
 };
 
+
 export const downloadOrderPDF = async (req, res) => {
   const { orderId } = req.params;
-  const categoria = (req.query.categoria || '').toLowerCase(); // 'churros' o 'otros'
+  let { type } = req.query;
+  type = type ? type.toLowerCase() : '';
 
   try {
     const order = await orderService.getOrderWithItems(orderId);
-    if (!order) return res.status(404).json({ message: 'Order not found' });
-
-    let items = [];
-    let catName = '';
-    if (categoria === 'churros') {
-      items = order.items.filter(i => (i.category || '').toLowerCase() === 'churros');
-      catName = 'CHURROS';
-    } else if (categoria === 'otros') {
-      items = order.items.filter(i => (i.category || '').toLowerCase() !== 'churros');
-      catName = 'OTROS';
-    } else {
-      return res.status(400).json({ message: 'Categoría inválida (debe ser "churros" u "otros")' });
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
     }
 
-    if (!items.length) {
-      return res.status(404).json({ message: `No hay productos en la categoría "${catName}"` });
+    // Normaliza la lista de items
+    const items = order.items || order.order_items || [];
+    const churrosItems = items.filter(
+      i => (i.products?.category || i.category || '').toLowerCase() === 'churros'
+    );
+    const otrosItems = items.filter(
+      i => (i.products?.category || i.category || '').toLowerCase() !== 'churros'
+    );
+
+    // Genera y envía sólo churros
+    if (type === 'churros') {
+      if (!churrosItems.length) {
+        return res
+          .status(404)
+          .json({ message: 'No hay productos en la categoría "Churros".' });
+      }
+      const pdfBuffer = await generateOrderPDF({
+        order,
+        items: churrosItems,
+        title: 'CHURROS'
+      });
+      res
+        .set('Content-Type', 'application/pdf')
+        .set(
+          'Content-Disposition',
+          `attachment; filename=pedido_${order.order_number}_churros.pdf`
+        )
+        .send(pdfBuffer);
+      return;
     }
 
-    // Genera el PDF SOLO con la categoría seleccionada
-    const makeHtmlBoleta = (order, categoria, items) => {
-      const date = new Date(order.created_at).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' });
-      const total = items.reduce((sum, it) => sum + (it.price * it.quantity), 0);
-      const toCLP = n => '$' + Number(n).toLocaleString('es-CL', { minimumFractionDigits: 0 });
-      const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g,'&gt;');
+    // Genera y envía sólo otros productos
+    if (type === 'otros') {
+      if (!otrosItems.length) {
+        return res
+          .status(404)
+          .json({ message: 'No hay productos en la categoría "Otros".' });
+      }
+      const pdfBuffer = await generateOrderPDF({
+        order,
+        items: otrosItems,
+        title: 'OTROS PRODUCTOS'
+      });
+      res
+        .set('Content-Type', 'application/pdf')
+        .set(
+          'Content-Disposition',
+          `attachment; filename=pedido_${order.order_number}_otros.pdf`
+        )
+        .send(pdfBuffer);
+      return;
+    }
 
-      return `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Pedido #${order.id} - ${categoria}</title>
-          <style>
-            body { font-family: 'monospace', Arial, sans-serif; font-size: 17px; color: #1a1a1a; background: #fff; padding:0; margin:0;}
-            .wrap { max-width:360px; margin:0 auto; background:#fff;}
-            h1 { text-align:center; font-size:2.2em; margin:20px 0 6px 0; letter-spacing: 1px; }
-            .fecha { text-align:center; font-size:1em; margin-bottom:14px; }
-            .cat { font-size:1.1em; text-align:center; font-weight:bold; margin-top:10px; }
-            .sep { text-align:center; margin:8px 0 12px 0; }
-            .total { text-align:center; font-size:1.15em; font-weight:bold; margin:18px 0 4px 0; color:#e86a01;}
-            .gracias { text-align:center; color:#555; font-size:.97em; margin:20px 0;}
-          </style>
-        </head>
-        <body>
-          <div class="wrap">
-            <h1>PEDIDO #${order.order_number}</h1>
-            <div class="fecha">Fecha: ${esc(date)}</div>
-            <div class="cat">${categoria}</div>
-            <div class="sep">********************</div>
-            ${items.map(item => `
-              <div style="margin: 0 0 18px 0;">
-                <div style="text-align:center; font-size:1.12em; font-weight:bold; margin-bottom:2px;">
-                  ${item.quantity}x ${esc(item.name)}
-                </div>
-                <div style="text-align:center; font-size:1em; color:#555;">${esc(item.description || '')}</div>
-                <div style="text-align:right; font-size:1.15em; font-weight:bold; margin-top:3px;">
-                  ${toCLP(item.price)}
-                </div>
-              </div>
-            `).join('')}
-            <div class="sep">********************</div>
-            <div class="gracias">¡Gracias por tu compra!<br/>Churros Cuchito</div>
-          </div>
-        </body>
-        </html>
-        `;
-    };
-
-    const html = makeHtmlBoleta(order, catName, items);
-    const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'], });
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'domcontentloaded' });
-    const pdfBuffer = await page.pdf({
-      format: 'A6',
-      printBackground: true,
-      margin: { top: 12, bottom: 12, left: 10, right: 10 }
-    });
-    await browser.close();
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=pedido_${order.id}_${catName.toLowerCase()}.pdf`);
-    res.send(pdfBuffer);
-
+    // Sin parámetro válido
+    return res
+      .status(400)
+      .json({ message: 'Falta el parámetro type=churros|otros' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error generating PDF', err);
+    return res.status(500).json({ message: 'Server error' });
   }
 };
-
-
 
 export const createOrder = async (req, res) => {
   const { user_id, guest_name, total, points_used, points_earned, metodo_pago, status, order_number, is_active } = req.body;

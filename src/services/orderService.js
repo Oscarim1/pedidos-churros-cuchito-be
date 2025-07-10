@@ -15,6 +15,7 @@ export async function getOrderWithItems(id) {
   const [orderRows] = await pool.query('SELECT * FROM orders WHERE id = ?', [id]);
   if (orderRows.length === 0) return null;
   const order = orderRows[0];
+
   const [items] = await pool.query(
     `SELECT oi.*, p.name, p.category
      FROM order_items oi
@@ -22,7 +23,19 @@ export async function getOrderWithItems(id) {
      WHERE oi.order_id = ?`,
     [id]
   );
-  order.items = items;
+
+  // Adaptar items: poner name y category dentro de products
+  order.items = items.map(item => ({
+    ...item,
+    products: {
+      name: item.name,
+      category: item.category
+    }
+  }));
+
+  // Opcional: para depurar/verificar
+  // console.log('Items adaptados para PDF:', order.items);
+
   return order;
 }
 
