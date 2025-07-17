@@ -2,7 +2,7 @@ import { pool } from '../config/db.js';
 import { randomUUID } from 'crypto';
 
 export async function getAllOrders() {
-  const [rows] = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
+  const [rows] = await pool.query('SELECT * FROM orders WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC');
   return rows;
 }
 
