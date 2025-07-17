@@ -10,5 +10,7 @@ export const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  timezone: '-04:00',      
+  dateStrings: true       
 });
