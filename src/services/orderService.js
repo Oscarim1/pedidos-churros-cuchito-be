@@ -2,7 +2,7 @@ import { pool } from '../config/db.js';
 import { randomUUID } from 'crypto';
 
 export async function getAllOrders() {
-  const [rows] = await pool.query('SELECT * FROM orders');
+  const [rows] = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
   return rows;
 }
 
