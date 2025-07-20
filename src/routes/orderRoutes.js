@@ -14,8 +14,8 @@ const router = express.Router();
 
 router.use(verificarToken);
 
-router.get('/', getOrders);
 router.get('/total-por-dia', getTotalPorDia);
+router.get('/', getOrders);
 router.get('/:orderId/pdf', downloadOrderPDF);
 router.get('/:id', getOrderById);
 router.post('/', createOrder);
