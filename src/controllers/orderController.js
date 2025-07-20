@@ -24,6 +24,7 @@ export const getOrderById = async (req, res) => {
 };
 
 export const getTotalPorDia = async (req, res) => {
+  console.log('👉 Entró a getTotalPorDia'); // prueba rápida
   const { fecha } = req.query;
   if (!fecha) return res.status(400).json({ message: 'fecha is required' });
   try {
