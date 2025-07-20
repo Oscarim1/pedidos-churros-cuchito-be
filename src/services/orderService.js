@@ -90,14 +90,15 @@ export async function deleteOrder(id) {
 export async function getTotalByDate(fecha) {
   const [rows] = await pool.query(
     `SELECT
-      DATE(CONVERT_TZ(created_at, 'UTC', 'America/Santiago')) AS fecha,
-      metodo_pago,
-      FORMAT(SUM(total), 2) AS total_por_dia
+       DATE(CONVERT_TZ(created_at, 'UTC', 'America/Santiago')) AS fecha,
+       metodo_pago,
+       FORMAT(SUM(total), 2) AS total_por_dia
      FROM orders
-     WHERE DATE(CONVERT_TZ(created_at, 'UTC', 'America/Santiago')) = ?
+     WHERE DATE(CONVERT_TZ(created_at, 'UTC', 'America/Santiago'))
+           BETWEEN ? AND ?
      GROUP BY fecha, metodo_pago
      ORDER BY fecha DESC, metodo_pago`,
-    [fecha]
+    [fecha, fecha]
   );
   return rows;
 }
