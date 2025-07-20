@@ -1,5 +1,6 @@
 import { pool } from '../config/db.js';
 import { randomUUID } from 'crypto';
+import { getTotalByDate } from './orderService.js';
 
 export async function getAllCierresCaja() {
   const [rows] = await pool.query('SELECT * FROM cierres_caja');
@@ -52,4 +53,47 @@ export async function deleteCierreCaja(id) {
   if (rows.length === 0) return false;
   await pool.query('DELETE FROM cierres_caja WHERE id = ?', [id]);
   return true;
+}
+
+export async function generateCierreCaja({
+  fecha,
+  maquina1,
+  pedidos_ya,
+  salidas_efectivo,
+  ingresos_efectivo,
+  usuario_id,
+  observacion,
+  is_active
+}) {
+  const totals = await getTotalByDate(fecha);
+  let totalEfectivo = 0;
+  let totalMaquinas = 0;
+  let totalWeb = 0;
+
+  for (const t of totals) {
+    const metodo = (t.metodo_pago || '').toLowerCase();
+    const monto = parseFloat(String(t.total_por_dia).replace(/,/g, '')) || 0;
+    if (metodo.includes('efectivo')) {
+      totalEfectivo += monto;
+    } else if (metodo.includes('web')) {
+      totalWeb += monto;
+      totalMaquinas += monto;
+    } else {
+      totalMaquinas += monto;
+    }
+  }
+
+  return createCierreCaja({
+    fecha,
+    total_efectivo: totalEfectivo,
+    total_maquinas: totalMaquinas,
+    maquina1: maquina1 ?? 0,
+    pedidos_ya: pedidos_ya ?? 0,
+    salidas_efectivo: salidas_efectivo ?? 0,
+    ingresos_efectivo: ingresos_efectivo ?? 0,
+    usuario_id,
+    observacion,
+    total_pagos_tarjeta_web: totalWeb,
+    is_active
+  });
 }
