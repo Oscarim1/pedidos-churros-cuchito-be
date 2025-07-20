@@ -119,3 +119,36 @@ export const deleteCierreCaja = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const generateCierreCaja = async (req, res) => {
+  const {
+    fecha,
+    maquina1,
+    pedidos_ya,
+    salidas_efectivo,
+    ingresos_efectivo,
+    usuario_id,
+    observacion,
+    is_active
+  } = req.body;
+
+  if (!fecha || !usuario_id) {
+    return res.status(400).json({ message: 'fecha and usuario_id are required' });
+  }
+  try {
+    const cierre = await cierreCajaService.generateCierreCaja({
+      fecha,
+      maquina1,
+      pedidos_ya,
+      salidas_efectivo,
+      ingresos_efectivo,
+      usuario_id,
+      observacion,
+      is_active
+    });
+    res.status(201).json(cierre);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
