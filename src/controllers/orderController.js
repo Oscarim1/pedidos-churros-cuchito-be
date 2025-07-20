@@ -23,6 +23,18 @@ export const getOrderById = async (req, res) => {
   }
 };
 
+export const getTotalPorDia = async (req, res) => {
+  const { fecha } = req.query;
+  if (!fecha) return res.status(400).json({ message: 'fecha is required' });
+  try {
+    const totals = await orderService.getTotalByDate(fecha);
+    res.json(totals);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 export const downloadOrderPDF = async (req, res) => {
   const { orderId } = req.params;
   const categoria = (req.query.categoria || '').toLowerCase(); // 'churros' o 'otros'
