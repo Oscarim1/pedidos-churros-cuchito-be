@@ -39,13 +39,10 @@ export const createCierreCaja = async (req, res) => {
     fecha,
     total_efectivo,
     total_maquinas,
-    maquina1,
-    pedidos_ya,
     salidas_efectivo,
     ingresos_efectivo,
     usuario_id,
     observacion,
-    total_pagos_tarjeta_web,
     is_active
   } = req.body;
 
@@ -53,12 +50,9 @@ export const createCierreCaja = async (req, res) => {
     !fecha ||
     total_efectivo == null ||
     total_maquinas == null ||
-    maquina1 == null ||
-    pedidos_ya == null ||
     salidas_efectivo == null ||
     ingresos_efectivo == null ||
-    !usuario_id ||
-    total_pagos_tarjeta_web == null
+    !usuario_id
   ) {
     return res.status(400).json({ message: 'Missing required fields' });
   }
@@ -67,13 +61,10 @@ export const createCierreCaja = async (req, res) => {
       fecha,
       total_efectivo,
       total_maquinas,
-      maquina1,
-      pedidos_ya,
       salidas_efectivo,
       ingresos_efectivo,
       usuario_id,
       observacion,
-      total_pagos_tarjeta_web,
       is_active
     });
     res.status(201).json(cierre);
@@ -89,13 +80,10 @@ export const updateCierreCaja = async (req, res) => {
     fecha,
     total_efectivo,
     total_maquinas,
-    maquina1,
-    pedidos_ya,
     salidas_efectivo,
     ingresos_efectivo,
     usuario_id,
     observacion,
-    total_pagos_tarjeta_web,
     is_active
   } = req.body;
   try {
@@ -103,13 +91,10 @@ export const updateCierreCaja = async (req, res) => {
       fecha,
       total_efectivo,
       total_maquinas,
-      maquina1,
-      pedidos_ya,
       salidas_efectivo,
       ingresos_efectivo,
       usuario_id,
       observacion,
-      total_pagos_tarjeta_web,
       is_active
     });
     if (!updated) return res.status(404).json({ message: 'Cierre de caja not found' });
@@ -135,8 +120,9 @@ export const deleteCierreCaja = async (req, res) => {
 export const generateCierreCaja = async (req, res) => {
   const {
     fecha,
-    maquina1,
-    pedidos_ya,
+    monto_declarado_efectivo,
+    monto_declarado_tarjeta,
+    monto_declarado_pedidos_ya,
     salidas_efectivo,
     ingresos_efectivo,
     usuario_id,
@@ -144,14 +130,15 @@ export const generateCierreCaja = async (req, res) => {
     is_active
   } = req.body;
 
-  if (!fecha || !usuario_id) {
+  if (!fecha || !usuario_id || monto_declarado_efectivo == null || monto_declarado_tarjeta == null || monto_declarado_pedidos_ya == null) {
     return res.status(400).json({ message: 'fecha and usuario_id are required' });
   }
   try {
     const cierre = await cierreCajaService.generateCierreCaja({
       fecha,
-      maquina1,
-      pedidos_ya,
+      monto_declarado_efectivo,
+      monto_declarado_tarjeta,
+      monto_declarado_pedidos_ya,
       salidas_efectivo,
       ingresos_efectivo,
       usuario_id,
