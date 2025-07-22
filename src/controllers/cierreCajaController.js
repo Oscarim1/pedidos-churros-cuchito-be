@@ -118,6 +118,12 @@ export const deleteCierreCaja = async (req, res) => {
 };
 
 export const generateCierreCaja = async (req, res) => {
+
+  const exist = await cierreCajaService.getCierreCajaByDate(req.body.fecha);
+  if (exist) {
+    return res.status(409).json({ message: 'Ya existe un cierre de caja para esta fecha' });
+  }
+
   const {
     fecha,
     monto_declarado_efectivo,
