@@ -1,4 +1,5 @@
 import * as orderService from '../services/orderService.js';
+import * as cierreCajaService from '../services/cierreCajaService.js';
 import puppeteer from 'puppeteer';
 
 export const getOrders = async (req, res) => {
@@ -24,9 +25,12 @@ export const getOrderById = async (req, res) => {
 };
 
 export const getTotalPorDia = async (req, res) => {
-  console.log('👉 Entró a getTotalPorDia'); // prueba rápida
   const { fecha } = req.query;
   if (!fecha) return res.status(400).json({ message: 'fecha is required' });
+
+  const exist = await cierreCajaService.getCierreCajaByDate(fecha);
+      if (exist) return res.status(409).json({ message: 'Cierre de caja already exist' });
+
   try {
     const totals = await orderService.getTotalByDate(fecha);
     res.json(totals);

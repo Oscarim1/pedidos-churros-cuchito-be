@@ -12,6 +12,15 @@ export async function getCierreCajaById(id) {
   return rows[0];
 }
 
+export async function getCierreCajaByDate(fecha) {
+  const [rows] = await pool.query(
+    'SELECT * FROM cierres_caja WHERE DATE(fecha) = ? ORDER BY fecha DESC',
+    [fecha]
+  );
+  
+  return rows[0] || null; 
+}
+
 export async function createCierreCaja({ fecha, total_efectivo, total_maquinas, maquina1, pedidos_ya, salidas_efectivo, ingresos_efectivo, usuario_id, observacion, total_pagos_tarjeta_web, is_active }) {
   const id = randomUUID();
   await pool.query(
