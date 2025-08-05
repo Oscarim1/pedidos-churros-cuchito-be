@@ -22,7 +22,7 @@ export async function getAsistenciaByDate(fecha) {
 export async function createAsistencia({ usuario_id, tipo }) {
   const id = randomUUID();
   await pool.query(
-    `INSERT INTO asistencias (id, usuario_id, ${tipo}) VALUES (?, NOW())`,
+    `INSERT INTO asistencias (id, usuario_id, ${tipo}) VALUES (?, ?, NOW())`,
     [id, usuario_id]
   );
   const [rows] = await pool.query('SELECT * FROM asistencias WHERE id = ?', [id]);
