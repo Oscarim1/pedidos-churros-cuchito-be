@@ -34,16 +34,6 @@ export async function createAsistencia({ usuario_id, tipo }) {
   return rows[0];
 }
 
-export async function updateAsistencia(id, tipo) {
-  await pool.query(
-      `UPDATE asistencias
-        SET ${tipo} = NOW(), updated_at = NOW()
-        WHERE id = ? AND ${tipo} IS NULL`,
-      [id]
-    );
-  const [rows] = await pool.query('SELECT * FROM asistencias WHERE id = ?', [id]);
-  return rows[0];
-}
 
 const columnas = {
   horario_entrada: 'horario_entrada',
