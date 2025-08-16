@@ -36,7 +36,9 @@ export async function createAsistencia({ usuario_id, tipo }) {
 
 export async function updateAsistencia(id, tipo) {
   await pool.query(
-      `UPDATE asistencias SET ${tipo} = NOW() WHERE id = ?`,
+      `UPDATE asistencias
+        SET ${tipo} = NOW(), updated_at = NOW()
+        WHERE id = ? AND ${tipo} IS NULL`,
       [id]
     );
   const [rows] = await pool.query('SELECT * FROM asistencias WHERE id = ?', [id]);
