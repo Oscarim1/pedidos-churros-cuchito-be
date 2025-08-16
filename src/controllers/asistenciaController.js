@@ -30,19 +30,27 @@ export const getAsistenciaById = async (req, res) => {
 };
 
 export const getAsistenciaByDate = async (req, res) => {
-  const { fecha } = req.params;
+  const { fecha, usuario_id } = req.params; // <- ahora viene por params
 
   if (!esFechaValida(fecha)) {
-  return res.status(400).json({ message: 'Formato de fecha inválido. Debe ser YYYY-MM-DD' });
+    return res.status(400).json({ message: 'Formato de fecha inválido. Debe ser YYYY-MM-DD' });
+  }
+  if (!usuario_id) {
+    return res.status(400).json({ message: 'usuario_id inválido' });
   }
 
   try {
-    const asistencia = await asistenciaService.getAsistenciaByDate(fecha);
-    if (!asistencia) return res.status(404).json({ message: 'No se encontró la asistencia para esa fecha' });
-    res.json(asistencia);
+    const asistencia = await asistenciaService.getAsistenciaByDateAndUser(fecha, usuario_id);
+    if (!asistencia) {
+      return res.status(404).json({
+        message: 'No se encontró asistencia para esa fecha y usuario',
+        fecha,
+        usuario_id,
+      });
+    }
+    return res.json(asistencia);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -65,23 +73,27 @@ export const createAsistencia = async (req, res) => {
 export const updateAsistencia = async (req, res) => {
   const { tipo } = req.body;
   const { fecha } = req.params;
+  const { usuario_id } = req.query;
 
   if (!esFechaValida(fecha)) {
   return res.status(400).json({ message: 'Formato de fecha inválido. Debe ser YYYY-MM-DD' });
   }
 
-
   if (!columnasValidas.includes(tipo)) {
     return res.status(400).json({ message: 'Tipo de asistencia inválido' });
   }
 
+  if (!usuario_id) {
+    return res.status(400).json({ message: 'usuario_id inválido' });
+  }
+
   try {
-    const asistenciaExistente = await asistenciaService.getAsistenciaByDate(fecha);
+    const asistenciaExistente = await asistenciaService.getAsistenciaByDateAndUser(fecha, usuario_id);
     if (!asistenciaExistente) {
       return res.status(404).json({ message: 'No se encontró la asistencia para esa fecha' });
     }
 
-    const asistenciaActualizada = await asistenciaService.updateAsistencia(asistenciaExistente.id, tipo);
+    const asistenciaActualizada = await asistenciaService.updateAsistencia(usuario_id, tipo);
     res.json(asistenciaActualizada);
   } catch (err) {
     console.error(err);
