@@ -72,8 +72,8 @@ export const createAsistencia = async (req, res) => {
 
 export const updateAsistencia = async (req, res) => {
   const { tipo } = req.body;
-  const { fecha } = req.params;
-  const { usuario_id } = req.query;
+  const { fecha } = req.body;
+  const { usuario_id } = req.params;
 
   if (!esFechaValida(fecha)) {
   return res.status(400).json({ message: 'Formato de fecha inválido. Debe ser YYYY-MM-DD' });
