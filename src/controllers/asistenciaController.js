@@ -71,18 +71,16 @@ export const createAsistencia = async (req, res) => {
 };
 
 export const updateAsistencia = async (req, res) => {
-  const { tipo } = req.body;
-  const { fecha } = req.body;
-  const { usuario_id } = req.params;
+  const tipo = req.body.tipo;
+  const fecha = req.body.fecha;
+  const usuario_id = req.params.usuario_id ;
 
   if (!esFechaValida(fecha)) {
-  return res.status(400).json({ message: 'Formato de fecha inválido. Debe ser YYYY-MM-DD' });
+    return res.status(400).json({ message: 'Formato de fecha inválido. Debe ser YYYY-MM-DD' });
   }
-
   if (!columnasValidas.includes(tipo)) {
     return res.status(400).json({ message: 'Tipo de asistencia inválido' });
   }
-
   if (!usuario_id) {
     return res.status(400).json({ message: 'usuario_id inválido' });
   }
@@ -93,10 +91,18 @@ export const updateAsistencia = async (req, res) => {
       return res.status(404).json({ message: 'No se encontró la asistencia para esa fecha' });
     }
 
-    const asistenciaActualizada = await asistenciaService.updateAsistencia(asistenciaExistente.id, tipo);
-    res.json(asistenciaActualizada);
+    const { alreadySet, asistencia } = await asistenciaService.updateAsistencia(asistenciaExistente.id, tipo);
+
+    if (alreadySet) {
+      return res.status(409).json({
+        message: `El campo "${tipo}" ya está marcado y no puede sobreescribirse`,
+        asistencia,
+      });
+    }
+
+    return res.json(asistencia);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
-}
+};
