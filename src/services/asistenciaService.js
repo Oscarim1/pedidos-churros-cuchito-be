@@ -11,11 +11,16 @@ export async function getAsistenciaById(id) {
   return rows[0];
 }
 
-export async function getAsistenciaByDate(fecha) {
+export async function getAsistenciaByDateAndUser(fecha, usuarioId) {
   const [rows] = await pool.query(
-    'SELECT * FROM asistencias WHERE DATE(fecha) = ? ORDER BY fecha DESC',
-    [fecha]
+    `SELECT * 
+     FROM asistencias 
+     WHERE DATE(fecha) = ? 
+       AND usuario_id = ? 
+     ORDER BY fecha DESC`,
+    [fecha, usuarioId]
   );
+
   return rows[0] || null; 
 }
 
