@@ -93,7 +93,7 @@ export const updateAsistencia = async (req, res) => {
       return res.status(404).json({ message: 'No se encontró la asistencia para esa fecha' });
     }
 
-    const asistenciaActualizada = await asistenciaService.updateAsistencia(usuario_id, tipo);
+    const asistenciaActualizada = await asistenciaService.updateAsistencia(asistenciaExistente.id, tipo);
     res.json(asistenciaActualizada);
   } catch (err) {
     console.error(err);
