@@ -9,6 +9,7 @@ import orderItemRoutes from './routes/orderItemRoutes.js';
 import cierreCajaRoutes from './routes/cierreCajaRoutes.js';
 import informesCierreCajaRoutes from './routes/informesCierreCajaRoutes.js';
 import asistenciaRoutes from './routes/asistenciaRoutes.js';
+import reportRoutes from './routes/reportRoutes.js';
 import setupSwagger from './config/swagger.js';
 import dotenv from 'dotenv';
 
@@ -30,6 +31,7 @@ app.use('/api/order-items', orderItemRoutes);
 app.use('/api/cierres-caja', cierreCajaRoutes);
 app.use('/api/informes-cierres-caja', informesCierreCajaRoutes);
 app.use('/api/asistencias', asistenciaRoutes);
+app.use('/api/reports', reportRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
