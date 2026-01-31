@@ -13,9 +13,9 @@ const router = express.Router();
 router.use(verificarToken);
 
 router.get('/', getAsistencia);
-router.get('/fecha/:fecha', getAsistenciaByDate);
+router.get('/:fecha/:usuario_id', getAsistenciaByDate);
 router.get('/:id', getAsistenciaById);
 router.post('/', createAsistencia);
-router.put('/:id', updateAsistencia);
+router.put('/usuario/:usuario_id', updateAsistencia);
 
 export default router;

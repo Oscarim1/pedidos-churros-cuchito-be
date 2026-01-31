@@ -11,11 +11,16 @@ export async function getAsistenciaById(id) {
   return rows[0];
 }
 
-export async function getAsistenciaByDate(fecha) {
+export async function getAsistenciaByDateAndUser(fecha, usuarioId) {
   const [rows] = await pool.query(
-    'SELECT * FROM asistencias WHERE DATE(fecha) = ? ORDER BY fecha DESC',
-    [fecha]
+    `SELECT * 
+     FROM asistencias 
+     WHERE DATE(fecha) = ? 
+       AND usuario_id = ? 
+     ORDER BY fecha DESC`,
+    [fecha, usuarioId]
   );
+
   return rows[0] || null; 
 }
 
@@ -29,12 +34,30 @@ export async function createAsistencia({ usuario_id, tipo }) {
   return rows[0];
 }
 
-export async function updateAsistencia(id, tipo) {
-  await pool.query(
-      `UPDATE asistencias SET ${tipo} = NOW() WHERE id = ?`,
-      [id]
-    );
-  const [rows] = await pool.query('SELECT * FROM asistencias WHERE id = ?', [id]);
-  return rows[0];
-}
 
+const columnas = {
+  horario_entrada: 'horario_entrada',
+  horario_salida: 'horario_salida',
+  horario_inicio_colacion: 'horario_inicio_colacion',
+  horario_fin_colacion: 'horario_fin_colacion',
+};
+
+export async function updateAsistencia(id, tipo) {
+  const columna = columnas[tipo];
+  if (!columna) throw new Error('Tipo de asistencia inválido');
+
+  const sql = `
+    UPDATE asistencias
+    SET ${columna} = NOW(), updated_at = NOW()
+    WHERE id = ? AND ${columna} IS NULL
+  `;
+  const [result] = await pool.query(sql, [id]);
+
+  if (result.affectedRows === 0) {
+    const [rows] = await pool.query('SELECT * FROM asistencias WHERE id = ? LIMIT 1', [id]);
+    return { alreadySet: true, asistencia: rows[0] || null };
+  }
+
+  const [rows] = await pool.query('SELECT * FROM asistencias WHERE id = ? LIMIT 1', [id]);
+  return { alreadySet: false, asistencia: rows[0] || null };
+}
