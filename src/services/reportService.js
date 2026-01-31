@@ -5,7 +5,7 @@ export async function getVentasPorRango(fechaInicio, fechaFin) {
     SELECT
       DATE(CONVERT_TZ(created_at, 'UTC', 'America/Santiago')) AS fecha,
       metodo_pago,
-      FORMAT(SUM(total), 2) AS total_por_dia
+      SUM(total) AS total_por_dia
     FROM orders
     WHERE DATE(CONVERT_TZ(created_at, 'UTC', 'America/Santiago'))
           BETWEEN ? AND ?
@@ -14,5 +14,9 @@ export async function getVentasPorRango(fechaInicio, fechaFin) {
   `;
 
   const [rows] = await pool.query(sql, [fechaInicio, fechaFin]);
-  return rows;
+
+  return rows.map(row => ({
+    ...row,
+    total_por_dia: Number(row.total_por_dia).toLocaleString('es-CL')
+  }));
 }
