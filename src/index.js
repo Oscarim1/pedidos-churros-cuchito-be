@@ -11,6 +11,7 @@ import informesCierreCajaRoutes from './routes/informesCierreCajaRoutes.js';
 import asistenciaRoutes from './routes/asistenciaRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import printerRoutes from './routes/printerRoutes.js';
 import setupSwagger from './config/swagger.js';
 import dotenv from 'dotenv';
 
@@ -34,6 +35,7 @@ app.use('/api/informes-cierres-caja', informesCierreCajaRoutes);
 app.use('/api/asistencias', asistenciaRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/printer', printerRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

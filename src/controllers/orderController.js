@@ -1,5 +1,6 @@
 import * as orderService from '../services/orderService.js';
 import * as cierreCajaService from '../services/cierreCajaService.js';
+import * as printService from '../services/printService.js';
 import puppeteer from 'puppeteer';
 
 export const getOrders = async (req, res) => {
@@ -137,10 +138,23 @@ export const downloadOrderPDF = async (req, res) => {
 
 
 export const createOrder = async (req, res) => {
-  const { user_id, guest_name, total, points_used, points_earned, metodo_pago, status, order_number, is_active } = req.body;
+  const { user_id, guest_name, total, points_used, points_earned, metodo_pago, status, order_number, is_active, auto_print } = req.body;
   if (total == null) return res.status(400).json({ message: 'total is required' });
   try {
     const order = await orderService.createOrder({ user_id, guest_name, total, points_used, points_earned, metodo_pago, status, order_number, is_active });
+
+    // Impresion automatica (no bloquea la respuesta si falla)
+    // Por defecto imprime, a menos que auto_print === false
+    if (auto_print !== false) {
+      printService.printOrderByCategory(order.id)
+        .then(results => {
+          console.log(`[Order ${order.order_number}] Impresion:`, results);
+        })
+        .catch(err => {
+          console.error(`[Order ${order.order_number}] Error impresion:`, err.message);
+        });
+    }
+
     res.status(201).json(order);
   } catch (err) {
     console.error(err);
