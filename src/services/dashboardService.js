@@ -342,21 +342,33 @@ export async function getUltimosPedidos(from, to) {
  * Obtiene lista de trabajadores que asistieron con sus horarios
  */
 export async function getAsistencia(from, to) {
-  const [rows] = await pool.query(SQL_ASISTENCIA, [from, to]);
+  try {
+    const [rows] = await pool.query(SQL_ASISTENCIA, [from, to]);
 
-  // Obtener trabajadores únicos (por si hay múltiples días)
-  const trabajadoresUnicos = new Set(rows.map(r => r.id));
+    // Obtener trabajadores únicos (por si hay múltiples días)
+    const trabajadoresUnicos = new Set(rows.map(r => r.id));
 
-  return {
-    trabajadoresAsistieron: trabajadoresUnicos.size,
-    trabajadores: rows.map(row => ({
-      id: row.id,
-      nombre: row.nombre,
-      fecha: row.fecha,
-      horario_entrada: row.horario_entrada || null,
-      horario_salida: row.horario_salida || null
-    }))
-  };
+    return {
+      trabajadoresAsistieron: trabajadoresUnicos.size,
+      trabajadores: rows.map(row => ({
+        id: row.id,
+        nombre: row.nombre,
+        fecha: row.fecha,
+        horario_entrada: row.horario_entrada || null,
+        horario_salida: row.horario_salida || null
+      }))
+    };
+  } catch (err) {
+    // Si la tabla no existe, devolver datos vacíos
+    if (err.code === 'ER_NO_SUCH_TABLE') {
+      console.warn('Tabla asistencias no existe, devolviendo datos vacíos');
+      return {
+        trabajadoresAsistieron: 0,
+        trabajadores: []
+      };
+    }
+    throw err;
+  }
 }
 
 // ============================================================================
