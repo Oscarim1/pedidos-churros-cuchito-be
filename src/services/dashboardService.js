@@ -183,12 +183,19 @@ const SQL_ULTIMOS_PEDIDOS = `
 `;
 
 /**
- * SQL: Asistencia (trabajadores distintos que asistieron)
+ * SQL: Asistencia - lista de trabajadores que asistieron con sus horarios
  */
 const SQL_ASISTENCIA = `
-  SELECT COUNT(DISTINCT usuario_id) AS trabajadoresAsistieron
-  FROM asistencias
-  WHERE DATE(fecha) BETWEEN ? AND ?
+  SELECT
+    u.id,
+    u.username AS nombre,
+    DATE_FORMAT(a.fecha, '%Y-%m-%d') AS fecha,
+    DATE_FORMAT(a.horario_entrada, '%H:%i') AS horario_entrada,
+    DATE_FORMAT(a.horario_salida, '%H:%i') AS horario_salida
+  FROM asistencias a
+  INNER JOIN users u ON a.usuario_id = u.id
+  WHERE DATE(a.fecha) BETWEEN ? AND ?
+  ORDER BY a.fecha DESC, u.username ASC
 `;
 
 // ============================================================================
@@ -332,14 +339,36 @@ export async function getUltimosPedidos(from, to) {
 }
 
 /**
- * Obtiene conteo de trabajadores que asistieron
+ * Obtiene lista de trabajadores que asistieron con sus horarios
  */
 export async function getAsistencia(from, to) {
-  const [rows] = await pool.query(SQL_ASISTENCIA, [from, to]);
+  try {
+    const [rows] = await pool.query(SQL_ASISTENCIA, [from, to]);
 
-  return {
-    trabajadoresAsistieron: parseInt(rows[0]?.trabajadoresAsistieron, 10) || 0
-  };
+    // Obtener trabajadores únicos (por si hay múltiples días)
+    const trabajadoresUnicos = new Set(rows.map(r => r.id));
+
+    return {
+      trabajadoresAsistieron: trabajadoresUnicos.size,
+      trabajadores: rows.map(row => ({
+        id: row.id,
+        nombre: row.nombre,
+        fecha: row.fecha,
+        horario_entrada: row.horario_entrada || null,
+        horario_salida: row.horario_salida || null
+      }))
+    };
+  } catch (err) {
+    // Si la tabla no existe, devolver datos vacíos
+    if (err.code === 'ER_NO_SUCH_TABLE') {
+      console.warn('Tabla asistencias no existe, devolviendo datos vacíos');
+      return {
+        trabajadoresAsistieron: 0,
+        trabajadores: []
+      };
+    }
+    throw err;
+  }
 }
 
 // ============================================================================
