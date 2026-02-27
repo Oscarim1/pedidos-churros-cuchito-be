@@ -13,6 +13,10 @@ export const login = async (req, res) => {
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(401).json({ message: 'Contraseña incorrecta' });
 
+    if (!user.is_active) {
+      return res.status(403).json({ message: 'Usuario desactivado. Contacta al administrador.' });
+    }
+
     const role = await roleService.getRoleById(user.role_id);
     const accessToken = authService.generarAccessToken({ id: user.id, rol: role?.name || user.role_id });
     const refreshToken = authService.generarRefreshToken({ id: user.id });
@@ -69,7 +73,11 @@ export const refreshToken = async (req, res) => {
       return res.status(403).json({ message: 'Refresh token inválido, revocado o expirado' });
 
     const user = await userService.getUserById(decoded.id);
-    const role = user ? await roleService.getRoleById(user.role_id) : null;
+    if (!user || !user.is_active) {
+      return res.status(403).json({ message: 'Usuario desactivado. Contacta al administrador.' });
+    }
+
+    const role = await roleService.getRoleById(user.role_id);
     const accessToken = authService.generarAccessToken({ id: decoded.id, rol: role?.name || user?.role_id });
     res.json({ accessToken });
   } catch (err) {

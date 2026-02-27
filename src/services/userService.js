@@ -63,3 +63,13 @@ export async function deleteUser(id) {
   await pool.query('DELETE FROM users WHERE id = ?', [id]);
   return true;
 }
+
+export async function getAllEmployees() {
+  const [rows] = await pool.query(`
+    SELECT u.id, u.username, u.email, u.rut, u.is_active, r.name AS role_name
+    FROM users u
+    LEFT JOIN roles r ON u.role_id = r.id
+    ORDER BY u.username ASC
+  `);
+  return rows;
+}

@@ -13,3 +13,10 @@ export const verificarToken = (req, res, next) => {
     next();
   });
 };
+
+export const soloAdmin = (req, res, next) => {
+  if (req.user?.rol !== 'admin') {
+    return res.status(403).json({ message: 'Solo administradores pueden realizar esta acción' });
+  }
+  next();
+};

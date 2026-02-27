@@ -107,3 +107,13 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const getAllEmployees = async (req, res) => {
+  try {
+    const employees = await userService.getAllEmployees();
+    res.json(employees);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
