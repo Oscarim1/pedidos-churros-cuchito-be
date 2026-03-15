@@ -3,17 +3,43 @@ import jwt from 'jsonwebtoken';
 import * as authService from '../services/authservice.js';
 import * as roleService from '../services/roleService.js';
 import * as userService from '../services/userService.js';
+import * as authLogService from '../services/authLogService.js';
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await authService.findUserByEmail(email);
-    if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+    if (!user) {
+      await authLogService.logAuthEvent({
+        userId: null,
+        email,
+        eventType: 'login_failed',
+        req,
+        failureReason: 'Usuario no encontrado'
+      });
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
 
     const match = await bcrypt.compare(password, user.password_hash);
-    if (!match) return res.status(401).json({ message: 'Contraseña incorrecta' });
+    if (!match) {
+      await authLogService.logAuthEvent({
+        userId: user.id,
+        email,
+        eventType: 'login_failed',
+        req,
+        failureReason: 'Contraseña incorrecta'
+      });
+      return res.status(401).json({ message: 'Contraseña incorrecta' });
+    }
 
     if (!user.is_active) {
+      await authLogService.logAuthEvent({
+        userId: user.id,
+        email,
+        eventType: 'login_failed',
+        req,
+        failureReason: 'Usuario desactivado'
+      });
       return res.status(403).json({ message: 'Usuario desactivado. Contacta al administrador.' });
     }
 
@@ -21,6 +47,14 @@ export const login = async (req, res) => {
     const accessToken = authService.generarAccessToken({ id: user.id, rol: role?.name || user.role_id });
     const refreshToken = authService.generarRefreshToken({ id: user.id });
     await authService.saveRefreshToken(user.id, refreshToken);
+
+    // Log de login exitoso
+    await authLogService.logAuthEvent({
+      userId: user.id,
+      email,
+      eventType: 'login_success',
+      req
+    });
 
     res.json({
       accessToken,
@@ -51,6 +85,14 @@ export const register = async (req, res) => {
     const refreshToken = authService.generarRefreshToken({ id: userId });
     await authService.saveRefreshToken(userId, refreshToken);
 
+    // Log de registro exitoso
+    await authLogService.logAuthEvent({
+      userId,
+      email,
+      eventType: 'register',
+      req
+    });
+
     res.status(201).json({
       accessToken,
       refreshToken,
@@ -79,6 +121,15 @@ export const refreshToken = async (req, res) => {
 
     const role = await roleService.getRoleById(user.role_id);
     const accessToken = authService.generarAccessToken({ id: decoded.id, rol: role?.name || user?.role_id });
+
+    // Log de refresh token usado
+    await authLogService.logAuthEvent({
+      userId: decoded.id,
+      email: user.email,
+      eventType: 'refresh_token',
+      req
+    });
+
     res.json({ accessToken });
   } catch (err) {
     console.error(err);
@@ -89,6 +140,19 @@ export const refreshToken = async (req, res) => {
 export const logout = async (req, res) => {
   const { refreshToken } = req.body;
   if (!refreshToken) return res.status(400).json({ message: 'Refresh token requerido' });
+
+  // Obtener el user_id del token antes de invalidarlo
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    await authLogService.logAuthEvent({
+      userId: decoded.id,
+      email: null,
+      eventType: 'logout',
+      req
+    });
+  } catch {
+    // Si el token es inválido, igual logueamos el intento de logout
+  }
 
   await authService.logout(refreshToken);
   res.json({ message: 'Sesión cerrada exitosamente' });

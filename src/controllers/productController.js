@@ -2,7 +2,8 @@ import * as productService from '../services/productService.js';
 
 export const getProducts = async (req, res) => {
   try {
-    const products = await productService.getAllProducts();
+    const includeInactive = req.query.includeInactive === 'true';
+    const products = await productService.getAllProducts({ includeInactive });
     res.json(products);
   } catch (err) {
     console.error(err);

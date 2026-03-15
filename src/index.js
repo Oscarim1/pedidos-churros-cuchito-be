@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
+import authLogRoutes from './routes/authLogRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import roleRoutes from './routes/roleRoutes.js';
 import productRoutes from './routes/productRoutes.js';
@@ -25,6 +26,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/auth-logs', authLogRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/products', productRoutes);
