@@ -1,8 +1,16 @@
 import { pool } from '../config/db.js';
 import { randomUUID } from 'crypto';
 
-export async function getAllProducts() {
-  const [rows] = await pool.query('SELECT * FROM products ORDER BY price ASC');
+export async function getAllProducts({ includeInactive = false } = {}) {
+  let query = 'SELECT * FROM products';
+
+  if (!includeInactive) {
+    query += ' WHERE is_active = 1';
+  }
+
+  query += ' ORDER BY price ASC';
+
+  const [rows] = await pool.query(query);
   return rows;
 }
 
