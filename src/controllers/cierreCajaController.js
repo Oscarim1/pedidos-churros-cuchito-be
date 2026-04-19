@@ -1,5 +1,27 @@
 import * as cierreCajaService from '../services/cierreCajaService.js';
 
+export const getCierresCajaConInforme = async (req, res) => {
+  try {
+    const cierres = await cierreCajaService.getAllCierresCajaConInforme();
+    res.json(cierres);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getCierreCajaConInformeById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const cierre = await cierreCajaService.getCierreCajaConInformeById(id);
+    if (!cierre) return res.status(404).json({ message: 'Cierre de caja not found' });
+    res.json(cierre);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 export const getCierresCaja = async (req, res) => {
   try {
     const cierres = await cierreCajaService.getAllCierresCaja();
