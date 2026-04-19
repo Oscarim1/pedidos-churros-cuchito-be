@@ -62,6 +62,38 @@ export async function deleteCierreCaja(id) {
   return true;
 }
 
+export async function getAllCierresCajaConInforme() {
+  const [rows] = await pool.query(`
+    SELECT
+      cc.*,
+      ic.id AS informe_id,
+      ic.monto_declarado_efectivo,
+      ic.monto_declarado_tarjeta,
+      ic.monto_declarado_pedidos_ya,
+      ic.created_at AS informe_created_at
+    FROM cierres_caja cc
+    LEFT JOIN informes_cierres_caja ic ON ic.cierre_caja_id = cc.id
+    ORDER BY cc.fecha DESC
+  `);
+  return rows;
+}
+
+export async function getCierreCajaConInformeById(id) {
+  const [rows] = await pool.query(`
+    SELECT
+      cc.*,
+      ic.id AS informe_id,
+      ic.monto_declarado_efectivo,
+      ic.monto_declarado_tarjeta,
+      ic.monto_declarado_pedidos_ya,
+      ic.created_at AS informe_created_at
+    FROM cierres_caja cc
+    LEFT JOIN informes_cierres_caja ic ON ic.cierre_caja_id = cc.id
+    WHERE cc.id = ?
+  `, [id]);
+  return rows[0] || null;
+}
+
 export async function generateCierreCaja({
   fecha,
   monto_declarado_efectivo,
