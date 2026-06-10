@@ -23,7 +23,10 @@ const app = express();
 setupSwagger(app);
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN?.split(',') ?? 'http://localhost:5173',
+  credentials: true,
+}));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/auth-logs', authLogRoutes);
