@@ -1,16 +1,26 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import {
   login,
   register,
   refreshToken,
   logout
 } from '../controllers/authController.js';
+import { verificarToken, soloAdmin } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/login', login);
-router.post('/register', register);
-router.post('/refresh', refreshToken);
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: 'Demasiados intentos. Intenta nuevamente en 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.post('/login', authLimiter, login);
+router.post('/register', verificarToken, soloAdmin, register);
+router.post('/refresh', authLimiter, refreshToken);
 router.post('/logout', logout);
 
 export default router;

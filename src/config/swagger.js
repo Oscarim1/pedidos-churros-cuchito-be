@@ -1,5 +1,6 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+import jwt from 'jsonwebtoken';
 
 const swaggerOptions = {
   definition: {
@@ -32,5 +33,14 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 export default function setupSwagger(app) {
-  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.use('/api/docs', (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'Token requerido para acceder a la documentación' });
+
+    jwt.verify(token, process.env.JWT_SECRET, (err) => {
+      if (err) return res.status(403).json({ message: 'Token inválido o expirado' });
+      next();
+    });
+  }, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 }
